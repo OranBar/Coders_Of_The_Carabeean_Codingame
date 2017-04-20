@@ -25,7 +25,7 @@ class Player {
 
 			int myShipCount = int.Parse(Console.ReadLine()); // the number of remaining ships
 			int entityCount = int.Parse(Console.ReadLine()); // the number of entities (e.g. ships, mines or cannonballs)
-			 
+
 			// Legge tutti gli input
 			for (int i = 0; i < entityCount; i++) {
 				string inputLine = Console.ReadLine();
@@ -56,29 +56,15 @@ class Player {
 					case "CANNONBALL":
 						Ship shootingShip = ships.FirstOrDefault(ship => ship.entityId == arg1);
 						CannonSplash cannon = new CannonSplash(shootingShip, arg2, entityId, x, y);
-						break;										 
-					
+						break;
+
 				}
-				//if (entityType == "SHIP" && arg4==1 ){
-				//	posx = x;
-				//	posy = y;
-				//}
-				//if (entityType == "SHIP" && arg4 == 0) {
-				//	enemyposx = x;
-				//	enemyposy = y;
-				//}
-				//if (entityType == "BARREL" && GetDistance(x,y,posx,posy)<closest){
-				//	movx = x;
-				//	movy = y;
-				//	closest = GetDistance(x, y, posx, posy);
-				//	count++;
-				//}
 			}
 			//------------------------------------------------
 			Game game = new Game(ships, barrels, mines, cannons, turn);
 
 			List<Ship> myShips = game.GetMyShips();
-			for (int i=0; i < myShips.Count; i++) {
+			for (int i = 0; i < myShips.Count; i++) {
 				Ship currentShip = myShips[i];
 
 				//Find closest ship
@@ -109,7 +95,7 @@ class Player {
 
 
 				if (game.barrels.Count == 0) {
-					if(turn%2 == 0) {
+					if (turn % 2 == 0) {
 						Console.Error.WriteLine("No more barrels");
 						int casx = new Random().Next(0, 5);
 						int casy = new Random().Next(0, 5);
@@ -118,22 +104,12 @@ class Player {
 						Console.WriteLine("FIRE " + closestEnemy.pos.x + " " + closestEnemy.pos.y);
 					}
 
-				}  
-				else if (GetDistance(currentShip.pos.x, currentShip.pos.y, closestEnemy.pos.x, closestEnemy.pos.y) <= 5) {
+				} else if (GetDistance(currentShip.pos.x, currentShip.pos.y, closestEnemy.pos.x, closestEnemy.pos.y) <= 5) {
 					Console.WriteLine("FIRE " + closestEnemy.pos.x + " " + closestEnemy.pos.y);
 				} else {
 					Console.WriteLine("MOVE " + closestBarrel.pos.x + " " + closestBarrel.pos.y);
 				}
-				
 			}
-
-
-			// Write an action using Console.WriteLine()
-			// To debug: Console.Error.WriteLine("Debug messages...");
-
-			 // Any valid action, such as "WAIT" or "MOVE x y"
-			
-			//FINE TURNO
 		}
 	}
 
