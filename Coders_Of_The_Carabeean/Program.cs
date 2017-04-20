@@ -16,12 +16,17 @@ class Player {
 		int movy = 0;
 		int posx = 0;
 		int posy = 0;
-		float closest= int.MaxValue;
+		
 		// game loop
 		while (true) {
+		int count = 0;
+			// INIZIO TURNO
+			float closest= int.MaxValue;
+
+
 			int myShipCount = int.Parse(Console.ReadLine()); // the number of remaining ships
 			int entityCount = int.Parse(Console.ReadLine()); // the number of entities (e.g. ships, mines or cannonballs)
-
+			 
 			// Legge tutti gli input
 			for (int i = 0; i < entityCount; i++) {
 				string inputLine = Console.ReadLine();
@@ -43,17 +48,26 @@ class Player {
 					movx = x;
 					movy = y;
 					closest = GetDistance(x, y, posx, posy);
+					count++;
 				}
 			}
-			//------------------------------------------------
 
+			//------------------------------------------------
+			if (count == 0) {
+				Console.Error.WriteLine("No more barrels");
+				int casx = new Random().Next(0, 5);
+				int casy = new Random().Next(0, 5);
+				Console.WriteLine("MOVE " + casx + " " + casy);
+			} else {
+				Console.WriteLine("MOVE " + movx + " " + movy);
+			}
 
 			// Write an action using Console.WriteLine()
 			// To debug: Console.Error.WriteLine("Debug messages...");
 
-			Console.WriteLine("MOVE " + movx + " " + movy); // Any valid action, such as "WAIT" or "MOVE x y"
-			closest = int.MaxValue;
-				
+			 // Any valid action, such as "WAIT" or "MOVE x y"
+			
+			//FINE TURNO
 		}
 	}
 
