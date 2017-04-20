@@ -16,11 +16,15 @@ class Player {
 		int movy = 0;
 		int posx = 0;
 		int posy = 0;
-		
+		int enemyposx = 0;
+		int enemyposy = 0;
+		int turn = 0;
+
 		// game loop
 		while (true) {
 		int count = 0;
 			// INIZIO TURNO
+			turn++;
 			float closest= int.MaxValue;
 
 
@@ -44,6 +48,10 @@ class Player {
 					posx = x;
 					posy = y;
 				}
+				if (entityType == "SHIP" && arg4 == 0) {
+					enemyposx = x;
+					enemyposy = y;
+				}
 				if (entityType == "BARREL" && GetDistance(x,y,posx,posy)<closest){
 					movx = x;
 					movy = y;
@@ -54,10 +62,18 @@ class Player {
 
 			//------------------------------------------------
 			if (count == 0) {
-				Console.Error.WriteLine("No more barrels");
-				int casx = new Random().Next(0, 5);
-				int casy = new Random().Next(0, 5);
-				Console.WriteLine("MOVE " + casx + " " + casy);
+				if(turn%2 == 0) {
+					Console.Error.WriteLine("No more barrels");
+					int casx = new Random().Next(0, 5);
+					int casy = new Random().Next(0, 5);
+					Console.WriteLine("MOVE " + casx + " " + casy);
+				} else {
+					Console.WriteLine("FIRE " + enemyposx + " " + enemyposy);
+				}
+
+			}  
+			else if (GetDistance(posx, posy, enemyposx, enemyposy) <=5) {
+				Console.WriteLine("FIRE " + enemyposx + " " + enemyposy);
 			} else {
 				Console.WriteLine("MOVE " + movx + " " + movy);
 			}
