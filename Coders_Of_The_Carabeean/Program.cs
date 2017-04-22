@@ -81,11 +81,12 @@ public class Barbanera {
 			Ship currentShip = myShips[i];
 
 			//Find closest ship
+			Ship ce = currentShip.GetClosest<Ship>(game);
+			Console.Error.WriteLine("Closest enemy is " + ce);
 			Ship closestEnemy = null;
 			float minShipDistance = float.MaxValue;
 			foreach (Ship enemyShip in game.GetOpponentShips()) {
 				float distance = currentShip.GetDistanceTo(enemyShip);
-				//float distance = GetDistance(currentShip.pos.x, currentShip.pos.y, enemyShip.pos.x, enemyShip.pos.y);
 				if (distance < minShipDistance) {
 					closestEnemy = enemyShip;
 					minShipDistance = distance;
@@ -94,12 +95,12 @@ public class Barbanera {
 			//--------------------------------
 
 			//Find closest barrel
+			Barrel cb = currentShip.GetClosest<Barrel>(game);
+			Console.Error.WriteLine("Closest enemy is " + cb);
 			Barrel closestBarrel = null;
 			float minBarrelDistance = float.MaxValue;
 			foreach (Barrel barrel in game.barrels) {
-				//float distance = currentShip.GetDistanceTo(enemyShip);
 				float distance = currentShip.GetDistanceTo(barrel);
-				//float distance = GetDistance(currentShip.pos.x, currentShip.pos.y, barrel.pos.x, barrel.pos.y);
 				if (distance < minBarrelDistance) {
 					closestBarrel = barrel;
 					minBarrelDistance = distance;
@@ -113,18 +114,14 @@ public class Barbanera {
 					Console.Error.WriteLine("No more barrels");
 					int casx = new Random().Next(0, 5);
 					int casy = new Random().Next(0, 5);
-					//Console.WriteLine("MOVE " + casx + " " + casy);
 					result += "MOVE " + casx + " " + casy+"\n";
 				} else {
-					//Console.WriteLine("FIRE " + closestEnemy.pos.x + " " + closestEnemy.pos.y);
 					result += "FIRE " + closestEnemy.pos.x + " " + closestEnemy.pos.y + "\n";
 				}
 
 			} else if (currentShip.GetDistanceTo(closestEnemy) <= 5) {
-				//Console.WriteLine("FIRE " + closestEnemy.pos.x + " " + closestEnemy.pos.y);
 				result += ("FIRE " + closestEnemy.pos.x + " " + closestEnemy.pos.y + "\n");
 			} else {
-				//Console.WriteLine("MOVE " + closestBarrel.pos.x + " " + closestBarrel.pos.y);
 				result += ("MOVE " + closestBarrel.pos.x + " " + closestBarrel.pos.y + "\n");
 			}
 		}
@@ -141,6 +138,17 @@ public class Game {
 	public List<Mine> mines = new List<Mine>();
 	public List<CannonSplash> cannons = new List<CannonSplash>();
 	public int turns;
+
+	public List<EntitySpazioTemporale> entities {
+		get {
+			return ships.Cast<EntitySpazioTemporale>()
+				.Concat(barrels.Cast<EntitySpazioTemporale>())
+				.Concat(mines.Cast<EntitySpazioTemporale>())
+				.Concat(cannons.Cast<EntitySpazioTemporale>())
+				.ToList();
+		}
+	}
+
 
 	public Game(List<Ship> ships, List<Barrel> barrels, List<Mine> mines, List<CannonSplash> cannons, int turns) {
 		this.ships = ships;
@@ -174,6 +182,10 @@ public class Position {
 		this.x = x;
 		this.y = y;
 	}
+
+	public override string ToString() {
+		return string.Format("({0}, {1})", x, y);
+	}
 }
 
 public abstract class Singularity {
@@ -195,6 +207,49 @@ public abstract class EntitySpazioTemporale : Singularity {
 		return Math.Abs(this.pos.x - entity.pos.x) + Math.Abs(this.pos.y - entity.pos.y);
 	}
 
+	public List<T> GetSorted<T>(List<T> entities) where T : EntitySpazioTemporale {
+		List<T> result = new List<T>(entities);
+		result.Sort((T e1, T e2) => {
+			return this.GetDistanceTo(e1).CompareTo(this.GetDistanceTo(e2));
+		});
+		return result;
+	}
+
+	public List<T> GetSortedDescending<T>(List<T> entities) where T : EntitySpazioTemporale {
+		List<T> result = new List<T>(entities);
+		result.Reverse();
+		return result;
+	}
+
+	public EntitySpazioTemporale GetClosest(EntitySpazioTemporale entity1, EntitySpazioTemporale entity2) {
+		float distTo1 = this.GetDistanceTo(entity1);
+		float distTo2 = this.GetDistanceTo(entity2);
+		if(distTo1 >= distTo2) {
+			return entity1;
+		} else {
+			return entity2;
+		}
+	}
+
+	public T GetClosest<T>(List<T> entities) where T : EntitySpazioTemporale {
+		return GetSorted(entities).FirstOrDefault();
+	}
+
+	public T GetClosest<T>(Game game) where T : EntitySpazioTemporale {
+		return GetClosest<T>(game.entities.Where(e => e is T).Cast<T>().ToList());
+	}
+
+	public T GetFurthest<T>(List<T> entities) where T : EntitySpazioTemporale {
+		return GetSorted(entities).LastOrDefault();
+	}
+
+	public T GetFurthest<T>(Game game) where T : EntitySpazioTemporale {
+		return GetFurthest<T>(game.entities.Where(e => e is T).Cast<T>().ToList());
+	}
+
+	public override string ToString() {
+		return base.ToString()+" "+pos;
+	}
 }
 
 
