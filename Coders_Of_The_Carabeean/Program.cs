@@ -81,7 +81,7 @@ public class Barbanera {
 			Ship currentShip = myShips[i];
 
 			//Find closest ship
-			Ship ce = currentShip.GetClosest<Ship>(game);
+			Ship ce = currentShip.GetClosestEnemy(game);
 			Console.Error.WriteLine("Closest enemy is " + ce);
 			Ship closestEnemy = null;
 			float minShipDistance = float.MaxValue;
@@ -92,11 +92,12 @@ public class Barbanera {
 					minShipDistance = distance;
 				}
 			}
+			Console.Error.WriteLine("Closest enemy is " + closestEnemy);
 			//--------------------------------
 
 			//Find closest barrel
 			Barrel cb = currentShip.GetClosest<Barrel>(game);
-			Console.Error.WriteLine("Closest enemy is " + cb);
+			Console.Error.WriteLine("Closest barrel is " + cb);
 			Barrel closestBarrel = null;
 			float minBarrelDistance = float.MaxValue;
 			foreach (Barrel barrel in game.barrels) {
@@ -106,6 +107,7 @@ public class Barbanera {
 					minBarrelDistance = distance;
 				}
 			}
+			Console.Error.WriteLine("Closest barrel is " + closestBarrel);
 			//-----------------
 
 
@@ -129,6 +131,10 @@ public class Barbanera {
 	}
 
 
+}
+
+public enum Owner {
+	Enemy=0, Player=1, Neutral=2
 }
 
 public class Game {
@@ -160,7 +166,7 @@ public class Game {
 
 	public List<Ship> GetShips(int owner) {
 		var result = from ship in ships
-					 where ship.owner == owner
+					 where ship.owner == (Owner) owner
 					 select ship;
 
 		return result.ToList();
@@ -190,9 +196,11 @@ public class Position {
 
 public abstract class Singularity {
 	public int entityId;
+	public Owner owner;
 
-	public Singularity(int entityId) {
+	public Singularity(int entityId, Owner owner = Owner.Neutral) {
 		this.entityId = entityId;
+		this.owner = owner;
 	}
 }
 
@@ -236,7 +244,7 @@ public abstract class EntitySpazioTemporale : Singularity {
 	}
 
 	public T GetClosest<T>(Game game) where T : EntitySpazioTemporale {
-		return GetClosest<T>(game.entities.Where(e => e is T).Cast<T>().ToList());
+		return GetClosest<T>(game.entities.Where(e => e is T && e != this).Cast<T>().ToList());
 	}
 
 	public T GetFurthest<T>(List<T> entities) where T : EntitySpazioTemporale {
@@ -258,7 +266,6 @@ public class Ship : EntitySpazioTemporale {
 	public int orientation;
 	public int speed;
 	public int stock;
-	public int owner;
 
 	public bool canShoot;
 
@@ -266,7 +273,7 @@ public class Ship : EntitySpazioTemporale {
 		this.orientation = orientation;
 		this.speed = speed;
 		this.stock = stock;
-		this.owner = owner;			
+		this.owner = (Owner) owner;			
 	}
 
 	public Position GetPunta() {
@@ -277,6 +284,14 @@ public class Ship : EntitySpazioTemporale {
 	public Position GetCulo() {
 		//TODO
 		return null;
+	}
+
+	public Ship GetClosestEnemy(Game game) {
+		return base.GetSorted<Ship>(game.ships).Where(s => s.owner == Owner.Enemy).First();
+	}
+
+	public Ship GetClosestAlly(Game game) {
+		return base.GetSorted<Ship>(game.ships).Where(s => s.owner == Owner.Player).First();
 	}
 }
 
