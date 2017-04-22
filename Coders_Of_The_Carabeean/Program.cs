@@ -13,6 +13,7 @@ class Player {
 	static void Main(string[] args) {
 		
 		int turn = 0;
+		Barbanera barbanera = new Barbanera();
 
 		// game loop
 		while (true) {
@@ -62,63 +63,76 @@ class Player {
 			}
 			//------------------------------------------------
 			Game game = new Game(ships, barrels, mines, cannons, turn);
-
-			List<Ship> myShips = game.GetMyShips();
-			for (int i = 0; i < myShips.Count; i++) {
-				Ship currentShip = myShips[i];
-
-				//Find closest ship
-				Ship closestEnemy = null;
-				float minShipDistance = float.MaxValue;
-				foreach (Ship enemyShip in game.GetOpponentShips()) {
-					//float distance = currentShip.GetDistanceTo(enemyShip);
-					float distance = GetDistance(currentShip.pos.x, currentShip.pos.y, enemyShip.pos.x, enemyShip.pos.y);
-					if (distance < minShipDistance) {
-						closestEnemy = enemyShip;
-						minShipDistance = distance;
-					}
-				}
-				//--------------------------------
-
-				//Find closest barrel
-				Barrel closestBarrel = null;
-				float minBarrelDistance = float.MaxValue;
-				foreach (Barrel barrel in game.barrels) {
-					//float distance = currentShip.GetDistanceTo(enemyShip);
-					float distance = GetDistance(currentShip.pos.x, currentShip.pos.y, barrel.pos.x, barrel.pos.y);
-					if (distance < minBarrelDistance) {
-						closestBarrel = barrel;
-						minBarrelDistance = distance;
-					}
-				}
-				//-----------------
-
-
-				if (game.barrels.Count == 0) {
-					if (turn % 2 == 0) {
-						Console.Error.WriteLine("No more barrels");
-						int casx = new Random().Next(0, 5);
-						int casy = new Random().Next(0, 5);
-						Console.WriteLine("MOVE " + casx + " " + casy);
-					} else {
-						Console.WriteLine("FIRE " + closestEnemy.pos.x + " " + closestEnemy.pos.y);
-					}
-
-				} else if (GetDistance(currentShip.pos.x, currentShip.pos.y, closestEnemy.pos.x, closestEnemy.pos.y) <= 5) {
-					Console.WriteLine("FIRE " + closestEnemy.pos.x + " " + closestEnemy.pos.y);
-				} else {
-					Console.WriteLine("MOVE " + closestBarrel.pos.x + " " + closestBarrel.pos.y);
-				}
-			}
+			string myMove = barbanera.Think(game);
+			Console.WriteLine(myMove);
 		}
-	}
-
-	public static float GetDistance(int x1, int y1, int x2, int y2) {
-		return Math.Abs(x2-x1)+ Math.Abs(y2-y1);
 	}
 }
 
 #region Data Classes
+
+public class Barbanera {
+
+	public string Think(Game game) {
+		string result = "";
+
+		List<Ship> myShips = game.GetMyShips();
+		for (int i = 0; i < myShips.Count; i++) {
+			Ship currentShip = myShips[i];
+
+			//Find closest ship
+			Ship closestEnemy = null;
+			float minShipDistance = float.MaxValue;
+			foreach (Ship enemyShip in game.GetOpponentShips()) {
+				float distance = currentShip.GetDistanceTo(enemyShip);
+				//float distance = GetDistance(currentShip.pos.x, currentShip.pos.y, enemyShip.pos.x, enemyShip.pos.y);
+				if (distance < minShipDistance) {
+					closestEnemy = enemyShip;
+					minShipDistance = distance;
+				}
+			}
+			//--------------------------------
+
+			//Find closest barrel
+			Barrel closestBarrel = null;
+			float minBarrelDistance = float.MaxValue;
+			foreach (Barrel barrel in game.barrels) {
+				//float distance = currentShip.GetDistanceTo(enemyShip);
+				float distance = currentShip.GetDistanceTo(barrel);
+				//float distance = GetDistance(currentShip.pos.x, currentShip.pos.y, barrel.pos.x, barrel.pos.y);
+				if (distance < minBarrelDistance) {
+					closestBarrel = barrel;
+					minBarrelDistance = distance;
+				}
+			}
+			//-----------------
+
+
+			if (game.barrels.Count == 0) {
+				if (game.turns % 2 == 0) {
+					Console.Error.WriteLine("No more barrels");
+					int casx = new Random().Next(0, 5);
+					int casy = new Random().Next(0, 5);
+					//Console.WriteLine("MOVE " + casx + " " + casy);
+					result += "MOVE " + casx + " " + casy+"\n";
+				} else {
+					//Console.WriteLine("FIRE " + closestEnemy.pos.x + " " + closestEnemy.pos.y);
+					result += "FIRE " + closestEnemy.pos.x + " " + closestEnemy.pos.y + "\n";
+				}
+
+			} else if (currentShip.GetDistanceTo(closestEnemy) <= 5) {
+				//Console.WriteLine("FIRE " + closestEnemy.pos.x + " " + closestEnemy.pos.y);
+				result += ("FIRE " + closestEnemy.pos.x + " " + closestEnemy.pos.y + "\n");
+			} else {
+				//Console.WriteLine("MOVE " + closestBarrel.pos.x + " " + closestBarrel.pos.y);
+				result += ("MOVE " + closestBarrel.pos.x + " " + closestBarrel.pos.y + "\n");
+			}
+		}
+		return result.Substring(0, result.Length-1);
+	}
+
+
+}
 
 public class Game {
 
@@ -151,8 +165,6 @@ public class Game {
 	public List<Ship> GetOpponentShips() {
 		return GetShips(0);
 	}
-
-
 }
 
 public class Position {
@@ -178,6 +190,11 @@ public abstract class EntitySpazioTemporale : Singularity {
 	public EntitySpazioTemporale(int entityId, int x, int y) : base(entityId) {
 		this.pos = new Position(x, y);
 	}
+
+	public float GetDistanceTo(EntitySpazioTemporale entity) {
+		return Math.Abs(this.pos.x - entity.pos.x) + Math.Abs(this.pos.y - entity.pos.y);
+	}
+
 }
 
 
@@ -187,6 +204,8 @@ public class Ship : EntitySpazioTemporale {
 	public int speed;
 	public int stock;
 	public int owner;
+
+	public bool canShoot;
 
 	public Ship(int entityId, int x, int y, int orientation, int speed, int stock, int owner) :	base(entityId, x, y) {
 		this.orientation = orientation;
